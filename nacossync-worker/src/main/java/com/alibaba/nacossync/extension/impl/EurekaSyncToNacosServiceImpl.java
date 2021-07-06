@@ -117,7 +117,7 @@ public class EurekaSyncToNacosServiceImpl implements SyncService {
             if (needSync(instance.getMetadata())) {
                 log.info("Add service instance from Eureka, serviceName={}, Ip={}, port={}",
                     instance.getAppName(), instance.getIPAddr(), instance.getPort());
-                destNamingService.registerInstance(taskDO.getServiceName(), buildSyncInstance(instance, taskDO));
+                destNamingService.registerInstance(taskDO.getServiceName(), taskDO.getGroupName(),buildSyncInstance(instance, taskDO));
             }
         }
     }

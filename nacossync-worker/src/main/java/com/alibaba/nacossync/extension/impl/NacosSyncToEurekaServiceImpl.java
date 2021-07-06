@@ -88,15 +88,15 @@ public class NacosSyncToEurekaServiceImpl implements SyncService {
     public boolean sync(TaskDO taskDO) {
         try {
             NamingService sourceNamingService =
-                    nacosServerHolder.get(taskDO.getSourceClusterId(), taskDO.getGroupName());
+                    nacosServerHolder.get(taskDO.getSourceClusterId(), taskDO.getNameSpace());
             EurekaNamingService destNamingService =
-                    eurekaServerHolder.get(taskDO.getDestClusterId(), taskDO.getGroupName());
+                    eurekaServerHolder.get(taskDO.getDestClusterId(),"");
 
             nacosListenerMap.putIfAbsent(taskDO.getTaskId(), event -> {
                 processNamingEvent(taskDO, sourceNamingService, destNamingService, event);
             });
 
-            sourceNamingService.subscribe(taskDO.getServiceName(), nacosListenerMap.get(taskDO.getTaskId()));
+            sourceNamingService.subscribe(taskDO.getServiceName(),taskDO.getGroupName(), nacosListenerMap.get(taskDO.getTaskId()));
         } catch (Exception e) {
             log.error("sync task from eureka to nacos was failed, taskId:{}", taskDO.getTaskId(), e);
             metricsManager.recordError(MetricsStatisticsType.SYNC_ERROR);
@@ -110,7 +110,7 @@ public class NacosSyncToEurekaServiceImpl implements SyncService {
         if (event instanceof NamingEvent) {
             try {
                 Set<String> instanceKeySet = new HashSet<>();
-                List<Instance> sourceInstances = sourceNamingService.getAllInstances(taskDO.getServiceName());
+                List<Instance> sourceInstances = sourceNamingService.getAllInstances(taskDO.getServiceName(),taskDO.getGroupName());
                 // 先将新的注册一遍
                 addAllNewInstance(taskDO, destNamingService, instanceKeySet, sourceInstances);
                 // 再将不存在的删掉
